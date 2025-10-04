@@ -12,7 +12,7 @@ int main ()
     stack_init (&stk1, 5);
     stk1.size = -1;
     stack_push (&stk1, 10);
-    // stack_push (&stk1, 12341234);
+
     int x = stack_pop (&stk1);
     printf ("%d", x);
     stack_destructor (&stk1);
@@ -43,11 +43,11 @@ void stack_destructor (sstack_t* stk1)
     return;
 }
 
-void stack_push (sstack_t* stk1, STACK_TYPE num) // TODO stackType
+void stack_push (sstack_t* stk1, STACK_TYPE num)
 {
     VERIFY(stk1);
 
-    if (stk1->size == stk1->capacity) // TODO func resize
+    if (stk1->size == stk1->capacity)
     {
         resize(stk1);
     }

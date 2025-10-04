@@ -13,7 +13,7 @@ const long long int poison = 0xB00B1E5;
 struct stack_t
 {
     STACK_TYPE *data;
-    size_t size; // TODO size_t
+    size_t size;
     size_t capacity;
 };
 
@@ -48,7 +48,7 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number);
                                 stack_dump (stk, file_name, line_number);   \
                             }                                               \
                         }\
-                        
+
 #else /*NDEBUG*/
 
 #define VERIFY(stk) do{ } while(false)
