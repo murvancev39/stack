@@ -1,4 +1,4 @@
-
+#define NDEBUG
 #include <stdio.h>
 #include <assert.h>
 #include <stdint.h>
@@ -11,7 +11,7 @@
 int main ()
 {
     sstack_t stk1 = {};
-    STACK_INIT(stk1, 5, 0xB00B1E5);
+    ARE_YOU_OKEY(STACK_INIT(stk1, 5, 0xB00B1E5), stack_destructor(&stk1));
     stack_push (&stk1, 10);
     int x = stack_pop (&stk1);
     printf ("%d", x);
@@ -23,66 +23,74 @@ int main ()
 
 // TODO replace to stack.cpp
 
-void stack_init (sstack_t* stk1, size_t capacity) // TODO add poison in args
+error_codes stack_init (sstack_t* stk1, size_t capacity, STACK_TYPE poison)
 {
     assert (capacity > 0);
     assert (stk1);
     assert (stk1->data == NULL);
-
+    poison = poison;
+#ifndef NDEBUG
+    stk1->poison = poison;
+#endif
     stk1->capacity = capacity;
     stk1->data = (STACK_TYPE*)calloc(stk1->capacity, sizeof(*stk1->data));
     if (stk1->data == NULL)
     {
-        // return STACK_INITIALIZE_ERROR;
-        VERIFY(stk1, STACK_INITIALIZE_ERROR); // TODO return error code
+        return STACK_INITIALIZE_ERROR;
     }
-
     stk1->size = 0;
 
-    #ifndef NDEBUG
-
+#ifndef NDEBUG
     for (size_t i = stk1->size ;i < stk1->capacity; i++ )
         {
             stk1->data[i] = stk1->poison;
         }
+#endif
     
-    #endif
-    
-    VERIFY(stk1, 0);
+    VERIFY(stk1);
+    return ALL_OKEY;
 }
 
 void stack_destructor (sstack_t* stk1)
 {
     free (stk1->data);
 
-    #ifndef NDEBUG
+#ifndef NDEBUG
     stk1->data = NULL;
     stk1->capacity = stk1->poison;
     stk1->size = stk1->poison;
-    #endif
+#endif
 
     return;
 }
 
 void stack_push (sstack_t* stk1, STACK_TYPE num)
 {
-    VERIFY(stk1, 0);
+    VERIFY(stk1);
 
     if (stk1->size == stk1->capacity)
     {
-        error_codes err = resize(stk1);
-        if (err != ALL_OKEY)
-        {
-            VERIFY(stk1, STACK_RESIZE_ERROR); // TODO return STACK_RESIZE_ERROR, in release also
-        }
+        ARE_YOU_OKEY(resize(stk1));
     }
 
     stk1->data [stk1->size] = num;
     stk1->size++;
 
-    VERIFY(stk1, 0);
+    VERIFY(stk1);
     return;
 }
+
+// ERROR_HANDLE(resize(stk), free(array2);free(array3););
+
+// #define ERROR_HANDLE(func, ...) 
+//     do {
+//         error_t error = func;
+//         if (error) {
+//             fprintf(stderr, "smth");
+//             __VA_ARGS__
+//             return error;
+//         }
+//     } while(false)
 
 
 error_codes resize (sstack_t* stk1)
@@ -93,23 +101,23 @@ error_codes resize (sstack_t* stk1)
     {
         return STACK_RESIZE_ERROR;
     }
-    VERIFY(stk1, 0);
+    VERIFY(stk1);
     return ALL_OKEY;
 }
 
 int stack_pop (sstack_t* stk1)
 {
-    VERIFY(stk1, ALL_OKEY);
+    VERIFY(stk1);
 
     STACK_TYPE pop_value = stk1->data [stk1->size - 1];
     
-    #ifndef NDEBUG
+#ifndef NDEBUG
     stk1->data [stk1->size - 1] = stk1->poison;
-    #endif
+#endif
 
     stk1->size -=1;
 
-    VERIFY(stk1, ALL_OKEY);
+    VERIFY(stk1);
 
     return pop_value;
 }
@@ -161,15 +169,13 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number)
 {
     printf ("\nstack_dump was called from %s : %d\n", file_name, line_number);
 
-    if (stk1 != NULL)
-    {
-        printf ("Stack [%p]\n", stk1);
-    }
-    else
+    if (stk1 == NULL)
     {
         printf ("stack point is NULL\n");
-        return ;
+        return;
     }
+
+    printf ("Stack [%p]\n", stk1);
 
     if (stk1->data == NULL)
     {
@@ -178,6 +184,7 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number)
                 "capacity = %llu\n", stk1->size, stk1->capacity);
         return ;
     }
+
     printf ("{\n"
             "size = %llu\n"
             "capacity = %llu\n"

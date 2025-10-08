@@ -10,41 +10,32 @@ typedef uint64_t ERROR_T;
 // const int ending = 0xDABAB7;
 // const long long int poison = 0xB00B1E5;
 
+
+struct stack_t
+{
+    STACK_TYPE *data;
+    size_t size;
+    size_t capacity;
 #ifndef NDEBUG
-
-struct stack_t
-{
-    STACK_TYPE *data;
-    size_t size;
-    size_t capacity;
     STACK_TYPE poison;
-};
-
-#else //NDEBUG
-
-struct stack_t
-{
-    STACK_TYPE *data;
-    size_t size;
-    size_t capacity;
-};
-
 #endif
+};
+
 
 enum error_codes
 {
-    ALL_OKEY = 0b00000,
-    NULL_STRUCT =  0b000001,
-    NULL_DATA =    0b000010,
-    INVALID_SIZE = 0b000100,
-    STACK_INITIALIZE_ERROR = 0b001000,
-    STACK_RESIZE_ERROR = 0b010000,
-    POISON_ERROR = 0b100000
+    ALL_OKEY                = 0b00000,
+    NULL_STRUCT             = 1 << 0,
+    NULL_DATA               = 1 << 1,
+    INVALID_SIZE            = 1 << 2,
+    STACK_INITIALIZE_ERROR  = 1 << 3,
+    STACK_RESIZE_ERROR      = 1 << 4,
+    POISON_ERROR            = 1 << 5
 };
 
 typedef struct stack_t sstack_t;
 
-void stack_init (sstack_t* stk1, size_t capacity);
+error_codes stack_init (sstack_t* stk1, size_t capacity, STACK_TYPE poison);
 void stack_destructor (sstack_t* stk1);
 void stack_push (sstack_t* stk1, STACK_TYPE num);
 error_codes resize (sstack_t* stk1);
@@ -56,33 +47,40 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number);
 
 #ifndef NDEBUG
 
-#define STACK_INIT(stk1, capacity, POISON)  stk1.poison = POISON;               \
-                                            stack_init (&stk1, capacity)         \
+#define ARE_YOU_OKEY(func, ...) do  {                                       \
+                                        error_codes error = func;           \
+                                        if (error == STACK_INITIALIZE_ERROR)\
+                                        {                                   \
+                                            fprintf (stderr, "STACK INITIALIZE ERROR INSUFFICIENT MEMORY");  \
+                                            __VA_ARGS__;                    \
+                                            assert (false);                 \
+                                        }                                   \
+                                        if (error == STACK_RESIZE_ERROR)    \
+                                        {                                   \
+                                            printf ("STACK RESIZE ERROR INSUFFICIENT MEMORY");               \
+                                            __VA_ARGS__;                    \
+                                            assert (false);                 \
+                                        }                                   \
+                                    } while(false);                         \
 
-#define POISON_IN_THE_LAST_CELL(stk) {stk->data [stk->size - 1] = poison;}
+#define STACK_INIT(stk1, capacity, POISON)  stack_init (&stk1, capacity, POISON)
 
-#define VERIFY(stk, error)    do{                                               \
-                                    ERROR_T res = 0;                            \
-                                    res = verificator(stk);                     \
-                                    res |= error;                               /*TODO remove this line*/\
-                                    if (res != 0)                               \
-                                    {                                           \
-                                        stack_dump (stk,  __FILE__, __LINE__);  \
-                                        abort();                                 \
-                                    }                                           \
-                                } while(false)                                  \
+#define VERIFY(stk)       do{                                               \
+                                ERROR_T res = verificator(stk);             \
+                                if (res != 0)                               \
+                                {                                           \
+                                    stack_dump (stk,  __FILE__, __LINE__);  \
+                                    assert(false);                          \
+                                }                                           \
+                            } while(false)                                  \
 
 #else /*NDEBUG*/
 
-#define STACK_INIT(stk1, capacity, POISON) stack_init (&stk1, capacity)
+#define ARE_YOU_OKEY(func, ...) do{func;} while (false)
 
-#define ALL_STACK_IN_THE_POISON(stk)  do{} while(false)
+#define STACK_INIT(stk1, capacity, POISON) stack_init (&stk1, capacity, 0)
 
-#define POISON_IN_THE_CELL(stk) do{ } while(false)
-
-#define poison 0
-
-#define VERIFY(stk, error) do{ } while(false)
+#define VERIFY(stk) do{} while(false)
 
 #endif /*NDEBUG*/
 
