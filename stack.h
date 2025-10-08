@@ -6,9 +6,21 @@
 typedef int STACK_TYPE;
 typedef uint64_t ERROR_T;
 
-const int opening = 0xBEBEBE;
-const int ending = 0xDABAB7;
-const long long int poison = 0xB00B1E5;
+// const int opening = 0xBEBEBE;
+// const int ending = 0xDABAB7;
+// const long long int poison = 0xB00B1E5;
+
+#ifndef NDEBUG
+
+struct stack_t
+{
+    STACK_TYPE *data;
+    size_t size;
+    size_t capacity;
+    STACK_TYPE poison;
+};
+
+#else //NDEBUG
 
 struct stack_t
 {
@@ -16,6 +28,8 @@ struct stack_t
     size_t size;
     size_t capacity;
 };
+
+#endif
 
 enum error_codes
 {
@@ -40,6 +54,9 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number);
 
 #ifndef NDEBUG
 
+#define STACK_INIT(stk1, capacity, POISON)  stk1.poison = POISON;               \
+                                            stack_init (&stk1, capacity)         \
+
 #define POISON_IN_THE_LAST_CELL(stk) {stk->data [stk->size - 1] = poison;}
 
 #define VERIFY(stk, error)    do{                                               \
@@ -54,13 +71,15 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number);
 
 #else /*NDEBUG*/
 
+#define STACK_INIT(stk1, capacity, POISON) stack_init (&stk1, capacity)
+
 #define ALL_STACK_IN_THE_POISON(stk)  do{} while(false)
 
 #define POISON_IN_THE_CELL(stk) do{ } while(false)
 
 #define poison 0
 
-#define VERIFY(stk) do{ } while(false)
+#define VERIFY(stk, error) do{ } while(false)
 
 #endif /*NDEBUG*/
 

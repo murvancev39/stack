@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <assert.h>
 #include <stdint.h>
@@ -6,15 +7,17 @@
 #include "stack.h"
 
 
+
 int main ()
 {
     sstack_t stk1 = {};
-    stack_init (&stk1, 5);
+    STACK_INIT(stk1, 5, 0xB00B1E5);
     stack_push (&stk1, 10);
     int x = stack_pop (&stk1);
     printf ("%d", x);
     //stack_dump(&stk1, __FILE__, __LINE__);
     stack_destructor (&stk1);
+    
     return 0;
 }
 
@@ -40,7 +43,7 @@ void stack_init (sstack_t* stk1, size_t capacity) // TODO add poison in args
 
     for (size_t i = stk1->size ;i < stk1->capacity; i++ )
         {
-            stk1->data[i] = poison;
+            stk1->data[i] = stk1->poison;
         }
     
     #endif
@@ -54,8 +57,8 @@ void stack_destructor (sstack_t* stk1)
 
     #ifndef NDEBUG
     stk1->data = NULL;
-    stk1->capacity = poison;
-    stk1->size = poison;
+    stk1->capacity = stk1->poison;
+    stk1->size = stk1->poison;
     #endif
 
     return;
@@ -81,6 +84,7 @@ void stack_push (sstack_t* stk1, STACK_TYPE num)
     return;
 }
 
+
 error_codes resize (sstack_t* stk1)
 {
     stk1->capacity = (2 * stk1->capacity);
@@ -100,7 +104,7 @@ int stack_pop (sstack_t* stk1)
     STACK_TYPE pop_value = stk1->data [stk1->size - 1];
     
     #ifndef NDEBUG
-    stk1->data [stk1->size - 1] = poison;
+    stk1->data [stk1->size - 1] = stk1->poison;
     #endif
 
     stk1->size -=1;
@@ -110,6 +114,7 @@ int stack_pop (sstack_t* stk1)
     return pop_value;
 }
 
+#ifndef NDEBUG
 ERROR_T verificator (sstack_t* stk1)
 {
     ERROR_T res_error = 0;
@@ -134,7 +139,7 @@ ERROR_T verificator (sstack_t* stk1)
     {
         if (i < stk1->size)
         {
-            if (stk1->data[i] == poison)
+            if (stk1->data[i] == stk1->poison)
             {
                 res_error |= POISON_ERROR;
                 return res_error;
@@ -142,7 +147,7 @@ ERROR_T verificator (sstack_t* stk1)
         }
         else
         {
-            if (stk1->data[i] != poison)
+            if (stk1->data[i] != stk1->poison)
             {
                 res_error |= POISON_ERROR;
                 return res_error;
@@ -192,3 +197,4 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number)
             "}\n");
     abort ();
 }
+#endif 
