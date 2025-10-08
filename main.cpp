@@ -13,8 +13,8 @@ int main ()
     stack_push (&stk1, 10);
     int x = stack_pop (&stk1);
     printf ("%d", x);
+    //stack_dump(&stk1, __FILE__, __LINE__);
     stack_destructor (&stk1);
-    
     return 0;
 }
 
@@ -33,19 +33,31 @@ void stack_init (sstack_t* stk1, size_t capacity) // TODO add poison in args
         // return STACK_INITIALIZE_ERROR;
         VERIFY(stk1, STACK_INITIALIZE_ERROR); // TODO return error code
     }
+
     stk1->size = 0;
 
-    ALL_STACK_IN_THE_POISON(stk1); // TODO remove define or do func
+    #ifndef NDEBUG
+
+    for (size_t i = stk1->size ;i < stk1->capacity; i++ )
+        {
+            stk1->data[i] = poison;
+        }
+    
+    #endif
     
     VERIFY(stk1, 0);
-}//
+}
 
 void stack_destructor (sstack_t* stk1)
 {
     free (stk1->data);
-    stk1->data = NULL; // TODO in debug
+
+    #ifndef NDEBUG
+    stk1->data = NULL;
     stk1->capacity = poison;
     stk1->size = poison;
+    #endif
+
     return;
 }
 
@@ -87,8 +99,10 @@ int stack_pop (sstack_t* stk1)
 
     STACK_TYPE pop_value = stk1->data [stk1->size - 1];
     
-    POISON_IN_THE_LAST_CELL(stk1); // TODO in debug
-    
+    #ifndef NDEBUG
+    stk1->data [stk1->size - 1] = poison;
+    #endif
+
     stk1->size -=1;
 
     VERIFY(stk1, ALL_OKEY);
@@ -101,12 +115,14 @@ ERROR_T verificator (sstack_t* stk1)
     ERROR_T res_error = 0;
     if (stk1 == NULL)
     {
-        res_error |= NULL_STRUCT; // TODO return
+        res_error |= NULL_STRUCT;
+        return res_error;
     }
 
     if (stk1->data == NULL)
     {
         res_error |= NULL_DATA;
+        return res_error;
     }
 
     if (stk1->size > stk1->capacity)
@@ -114,7 +130,25 @@ ERROR_T verificator (sstack_t* stk1)
         res_error |= INVALID_SIZE;
     }
 
-    // TODO poisons check
+    for (size_t i = 0; i < stk1->capacity; i++)
+    {
+        if (i < stk1->size)
+        {
+            if (stk1->data[i] == poison)
+            {
+                res_error |= POISON_ERROR;
+                return res_error;
+            }
+        }
+        else
+        {
+            if (stk1->data[i] != poison)
+            {
+                res_error |= POISON_ERROR;
+                return res_error;
+            }
+        }
+    }
     return res_error;
 }
 
@@ -147,11 +181,11 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number)
     {
         if (i <= stk1->size)
         {
-            printf ("* [%llu] = %d\n", i, stk1->data[i]);
+            printf ("* [%llu] = %x\n", i, stk1->data[i]);
         }
         else
         {
-            printf ("[%llu] = %d\n", i, stk1->data[i]);
+            printf ("[%llu] = %x\n", i, stk1->data[i]);
         }
     }
     printf ("    }\n"

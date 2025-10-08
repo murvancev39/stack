@@ -20,11 +20,12 @@ struct stack_t
 enum error_codes
 {
     ALL_OKEY = 0b00000,
-    NULL_STRUCT =  0b00001,
-    NULL_DATA =    0b00010,
-    INVALID_SIZE = 0b00100,
-    STACK_INITIALIZE_ERROR = 0b01000,
-    STACK_RESIZE_ERROR = 0b10000,
+    NULL_STRUCT =  0b000001,
+    NULL_DATA =    0b000010,
+    INVALID_SIZE = 0b000100,
+    STACK_INITIALIZE_ERROR = 0b001000,
+    STACK_RESIZE_ERROR = 0b010000,
+    POISON_ERROR = 0b100000
 };
 
 typedef struct stack_t sstack_t;
@@ -36,17 +37,10 @@ error_codes resize (sstack_t* stk1);
 int stack_pop (sstack_t* stk1);
 ERROR_T verificator (sstack_t* stk1);
 void stack_dump (sstack_t* stk1, const char *file_name, const int line_number);
-//
+
 #ifndef NDEBUG
 
 #define POISON_IN_THE_LAST_CELL(stk) {stk->data [stk->size - 1] = poison;}
-
-#define ALL_STACK_IN_THE_POISON(stk)  do{                                                           \
-                                            for (size_t i = stk1->size + 1;i < stk1->capacity; i++ )   \
-                                            {                                                       \
-                                                stk1->data[i] = poison;                             \
-                                            }                                                       \
-                                        }while(false)                                               \
 
 #define VERIFY(stk, error)    do{                                               \
                                     static ERROR_T res = 0;                     \
