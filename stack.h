@@ -36,7 +36,7 @@ error_codes resize (sstack_t* stk1);
 int stack_pop (sstack_t* stk1);
 ERROR_T verificator (sstack_t* stk1);
 void stack_dump (sstack_t* stk1, const char *file_name, const int line_number);
-
+//
 #ifndef NDEBUG
 
 #define POISON_IN_THE_LAST_CELL(stk) {stk->data [stk->size - 1] = poison;}

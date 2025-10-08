@@ -38,7 +38,7 @@ void stack_init (sstack_t* stk1, size_t capacity) // TODO add poison in args
     ALL_STACK_IN_THE_POISON(stk1); // TODO remove define or do func
     
     VERIFY(stk1, 0);
-}
+}//
 
 void stack_destructor (sstack_t* stk1)
 {
