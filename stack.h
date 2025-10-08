@@ -49,8 +49,10 @@ void stack_destructor (sstack_t* stk1);
 void stack_push (sstack_t* stk1, STACK_TYPE num);
 error_codes resize (sstack_t* stk1);
 int stack_pop (sstack_t* stk1);
+#ifndef NDEBUG
 ERROR_T verificator (sstack_t* stk1);
 void stack_dump (sstack_t* stk1, const char *file_name, const int line_number);
+#endif
 
 #ifndef NDEBUG
 
@@ -60,12 +62,13 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number);
 #define POISON_IN_THE_LAST_CELL(stk) {stk->data [stk->size - 1] = poison;}
 
 #define VERIFY(stk, error)    do{                                               \
-                                    static ERROR_T res = 0;                     \
+                                    ERROR_T res = 0;                            \
                                     res = verificator(stk);                     \
                                     res |= error;                               /*TODO remove this line*/\
                                     if (res != 0)                               \
                                     {                                           \
                                         stack_dump (stk,  __FILE__, __LINE__);  \
+                                        abort();                                 \
                                     }                                           \
                                 } while(false)                                  \
 

@@ -168,7 +168,7 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number)
     else
     {
         printf ("stack point is NULL\n");
-        abort ();
+        return ;
     }
 
     if (stk1->data == NULL)
@@ -176,7 +176,7 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number)
         printf ("data pooint is NULL\n"
                 "size = %llu\n"
                 "capacity = %llu\n", stk1->size, stk1->capacity);
-        abort ();
+        return ;
     }
     printf ("{\n"
             "size = %llu\n"
@@ -195,6 +195,6 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number)
     }
     printf ("    }\n"
             "}\n");
-    abort ();
+    return ;
 }
 #endif 
