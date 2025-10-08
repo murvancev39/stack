@@ -10,9 +10,7 @@ int main ()
 {
     sstack_t stk1 = {};
     stack_init (&stk1, 5);
-    stk1.size = -1;
     stack_push (&stk1, 10);
-
     int x = stack_pop (&stk1);
     printf ("%d", x);
     stack_destructor (&stk1);
@@ -22,7 +20,7 @@ int main ()
 
 // TODO replace to stack.cpp
 
-void stack_init (sstack_t* stk1, size_t capacity)
+void stack_init (sstack_t* stk1, size_t capacity) // TODO add poison in args
 {
     assert (capacity > 0);
     assert (stk1);
@@ -30,14 +28,22 @@ void stack_init (sstack_t* stk1, size_t capacity)
 
     stk1->capacity = capacity;
     stk1->data = (STACK_TYPE*)calloc(stk1->capacity, sizeof(*stk1->data));
+    if (stk1->data == NULL)
+    {
+        // return STACK_INITIALIZE_ERROR;
+        VERIFY(stk1, STACK_INITIALIZE_ERROR); // TODO return error code
+    }
     stk1->size = 0;
 
-    VERIFY(stk1);
+    ALL_STACK_IN_THE_POISON(stk1); // TODO remove define or do func
+    
+    VERIFY(stk1, 0);
 }
 
 void stack_destructor (sstack_t* stk1)
 {
     free (stk1->data);
+    stk1->data = NULL; // TODO in debug
     stk1->capacity = poison;
     stk1->size = poison;
     return;
@@ -45,41 +51,47 @@ void stack_destructor (sstack_t* stk1)
 
 void stack_push (sstack_t* stk1, STACK_TYPE num)
 {
-    VERIFY(stk1);
+    VERIFY(stk1, 0);
 
     if (stk1->size == stk1->capacity)
     {
-        resize(stk1);
+        error_codes err = resize(stk1);
+        if (err != ALL_OKEY)
+        {
+            VERIFY(stk1, STACK_RESIZE_ERROR); // TODO return STACK_RESIZE_ERROR, in release also
+        }
     }
 
     stk1->data [stk1->size] = num;
     stk1->size++;
 
-    VERIFY(stk1);
+    VERIFY(stk1, 0);
     return;
 }
 
-void resize (sstack_t* stk1)
+error_codes resize (sstack_t* stk1)
 {
     stk1->capacity = (2 * stk1->capacity);
     STACK_TYPE* realloc_err = (STACK_TYPE*)realloc (stk1->data, stk1->capacity * sizeof (*stk1->data));
     if (realloc_err == NULL)
     {
-        stk1->data = NULL;
+        return STACK_RESIZE_ERROR;
     }
-    VERIFY(stk1);
-    return;
+    VERIFY(stk1, 0);
+    return ALL_OKEY;
 }
 
 int stack_pop (sstack_t* stk1)
 {
-    VERIFY(stk1);
+    VERIFY(stk1, ALL_OKEY);
 
     STACK_TYPE pop_value = stk1->data [stk1->size - 1];
-    stk1->data [stk1->size - 1] = poison; // TODO in debug
+    
+    POISON_IN_THE_LAST_CELL(stk1); // TODO in debug
+    
     stk1->size -=1;
 
-    VERIFY(stk1);
+    VERIFY(stk1, ALL_OKEY);
 
     return pop_value;
 }
@@ -89,7 +101,7 @@ ERROR_T verificator (sstack_t* stk1)
     ERROR_T res_error = 0;
     if (stk1 == NULL)
     {
-        res_error |= NULL_STRUCT;
+        res_error |= NULL_STRUCT; // TODO return
     }
 
     if (stk1->data == NULL)
@@ -101,6 +113,8 @@ ERROR_T verificator (sstack_t* stk1)
     {
         res_error |= INVALID_SIZE;
     }
+
+    // TODO poisons check
     return res_error;
 }
 
@@ -115,7 +129,6 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number)
     else
     {
         printf ("stack point is NULL\n");
-        free (stk1->data);
         abort ();
     }
 
@@ -124,7 +137,6 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number)
         printf ("data pooint is NULL\n"
                 "size = %llu\n"
                 "capacity = %llu\n", stk1->size, stk1->capacity);
-        free (stk1->data);
         abort ();
     }
     printf ("{\n"
@@ -144,7 +156,5 @@ void stack_dump (sstack_t* stk1, const char *file_name, const int line_number)
     }
     printf ("    }\n"
             "}\n");
-
-    free (stk1->data);
     abort ();
 }

@@ -19,11 +19,12 @@ struct stack_t
 
 enum error_codes
 {
+    ALL_OKEY = 0b00000,
     NULL_STRUCT =  0b00001,
     NULL_DATA =    0b00010,
     INVALID_SIZE = 0b00100,
-
-
+    STACK_INITIALIZE_ERROR = 0b01000,
+    STACK_RESIZE_ERROR = 0b10000,
 };
 
 typedef struct stack_t sstack_t;
@@ -31,25 +32,39 @@ typedef struct stack_t sstack_t;
 void stack_init (sstack_t* stk1, size_t capacity);
 void stack_destructor (sstack_t* stk1);
 void stack_push (sstack_t* stk1, STACK_TYPE num);
-void resize (sstack_t* stk1);
+error_codes resize (sstack_t* stk1);
 int stack_pop (sstack_t* stk1);
 ERROR_T verificator (sstack_t* stk1);
 void stack_dump (sstack_t* stk1, const char *file_name, const int line_number);
 
 #ifndef NDEBUG
 
-#define VERIFY(stk)     {\
-                            static ERROR_T res = 0;                         \
-                            res = verificator(stk);                         \
-                            static const char *file_name = __FILE__;        \
-                            static const int line_number = __LINE__;        \
-                            if (res != 0)                                   \
-                            {                                               \
-                                stack_dump (stk, file_name, line_number);   \
-                            }                                               \
-                        }\
+#define POISON_IN_THE_LAST_CELL(stk) {stk->data [stk->size - 1] = poison;}
+
+#define ALL_STACK_IN_THE_POISON(stk)  do{                                                           \
+                                            for (size_t i = stk1->size + 1;i < stk1->capacity; i++ )   \
+                                            {                                                       \
+                                                stk1->data[i] = poison;                             \
+                                            }                                                       \
+                                        }while(false)                                               \
+
+#define VERIFY(stk, error)    do{                                               \
+                                    static ERROR_T res = 0;                     \
+                                    res = verificator(stk);                     \
+                                    res |= error;                               /*TODO remove this line*/\
+                                    if (res != 0)                               \
+                                    {                                           \
+                                        stack_dump (stk,  __FILE__, __LINE__);  \
+                                    }                                           \
+                                } while(false)                                  \
 
 #else /*NDEBUG*/
+
+#define ALL_STACK_IN_THE_POISON(stk)  do{} while(false)
+
+#define POISON_IN_THE_CELL(stk) do{ } while(false)
+
+#define poison 0
 
 #define VERIFY(stk) do{ } while(false)
 
