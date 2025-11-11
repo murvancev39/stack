@@ -9,7 +9,6 @@ typedef int STACK_TYPE;
 
 const int opening = 0xBEBEBE;
 const int ending = 0xDABAB7;
-const long long int poison = 0xB00B1E5;
 
 struct stack_t
 {

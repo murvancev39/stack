@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-
 error_codes stack_init (sstack_t* stk1, size_t capacity, STACK_TYPE poison)
 {
     assert (capacity > 0);
