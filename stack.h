@@ -3,7 +3,39 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include "..\command\command.h"
+
+
+typedef int STACK_TYPE;
+
+const int opening = 0xBEBEBE;
+const int ending = 0xDABAB7;
+const long long int poison = 0xB00B1E5;
+
+struct stack_t
+{
+    STACK_TYPE *data;
+    size_t size;
+    size_t capacity;
+#ifndef NDEBUG
+    STACK_TYPE poison;
+#endif
+};
+
+typedef struct stack_t sstack_t;
+
+enum error_codes
+{
+    ALL_OKEY                = 0b00000,
+    NULL_STRUCT             = 1 << 0,
+    NULL_DATA               = 1 << 1,
+    INVALID_SIZE            = 1 << 2,
+    STACK_INITIALIZE_ERROR  = 1 << 3,
+    STACK_RESIZE_ERROR      = 1 << 4,
+    POISON_ERROR            = 1 << 5
+};
+
+
+
 
 typedef uint64_t ERROR_T;
 
